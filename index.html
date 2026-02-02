@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Valentine ❤️</title>
+  <style>
+    :root{
+      --bg:#d4002a;
+      --card:#ffffff;
+      --text:#1b1b1b;
+      --yes:#18a957;
+      --no:#ff3b5c;
+      --shadow:0 18px 60px rgba(0,0,0,.25);
+      --radius:18px;
+      --btnRadius:14px;
+    }
+    *{box-sizing:border-box;}
+    html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+    body{
+      overflow:hidden;
+      background:var(--bg);
+      display:grid;
+      place-items:center;
+      color:var(--text);
+    }
+
+    /* inimioare */
+    .hearts{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0;}
+    .heart{
+      position:absolute;
+      width:18px;height:18px;
+      background:rgba(255,255,255,.35);
+      transform:rotate(45deg);
+      border-radius:4px;
+      animation:floatUp linear infinite;
+      filter:drop-shadow(0 4px 8px rgba(0,0,0,.12));
+    }
+    .heart::before,.heart::after{
+      content:"";
+      position:absolute;
+      width:18px;height:18px;
+      background:rgba(255,255,255,.35);
+      border-radius:50%;
+    }
+    .heart::before{left:-9px;top:0;}
+    .heart::after{left:0;top:-9px;}
+    @keyframes floatUp{
+      0%{transform:translateY(120vh) rotate(45deg) scale(var(--s)); opacity:0;}
+      10%{opacity:.85;}
+      100%{transform:translateY(-20vh) rotate(45deg) scale(var(--s)); opacity:0;}
+    }
+
+    /* card */
+    .card{
+      position:relative;
+      z-index:2;
+      width:min(560px,92vw);
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:28px 26px 22px;
+      text-align:center;
+    }
+    .question{
+      font-size:clamp(22px,3.8vw,34px);
+      line-height:1.15;
+      margin:4px 0 18px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .buttons{
+      position:relative;
+      height:64px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:18px;
+      margin-top:8px;
+      z-index:3;
+    }
+    button{
+      border:0;
+      padding:14px 22px;
+      font-size:16px;
+      font-weight:800;
+      border-radius:var(--btnRadius);
+      cursor:pointer;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+      transition:transform .08s ease;
+      user-select:none;
+      touch-action:manipulation;
+    }
+    button:active{transform:translateY(1px) scale(.99);}
+    #yesBtn{background:var(--yes); color:#fff;}
+
+    /* NO: peste card, poziționat fixed ca să poată fugi pe ecran */
+    #noBtn{
+      background:var(--no);
+      color:#fff;
+      position:fixed;
+      z-index:9999; /* IMPORTANT: peste card */
+    }
+
+    /* modal */
+    .modalOverlay{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.45);
+      display:none;
+      place-items:center;
+      z-index:10000;
+      padding:18px;
+    }
+    .modal{
+      width:min(520px,92vw);
+      background:#fff;
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:22px 20px;
+      text-align:center;
+    }
+    .modal p{margin:0 0 16px; opacity:.9; font-size:18px; font-weight:700;}
+    .closeHearts{
+      background:#111;
+      color:#fff;
+      padding:12px 18px;
+      border-radius:12px;
+      font-weight:900;
+      font-size:18px;
+      letter-spacing:.5px;
+    }
+    .hint{margin-top:12px; font-size:12px; opacity:.6;}
+  </style>
+</head>
+<body>
+
+  <div class="hearts" id="hearts"></div>
+
+  <main class="card" aria-label="Valentine card">
+    <div class="question">Would you like to be my Valentine? ❤️</div>
+
+    <div class="buttons">
+      <button id="yesBtn" type="button">Yes</button>
+    </div>
+
+    
+  </main>
+
+  <!-- NO e în afara cardului ca să nu fie „îngropat” sub el -->
+  <button id="noBtn" type="button">No</button>
+
+  <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <p>Asta este cea mai bună decizie a ta. Te iubesc scumpa mea !!!</p>
+      <button class="closeHearts" id="closeModal" type="button">💖💖💖</button>
+    </div>
+  </div>
+
+  <script>
+    // --------- inimioare ----------
+    const heartsWrap = document.getElementById('hearts');
+    const HEARTS_COUNT = 26;
+    const rand = (min,max)=>Math.random()*(max-min)+min;
+
+    for(let i=0;i<HEARTS_COUNT;i++){
+      const h=document.createElement('div');
+      h.className='heart';
+      h.style.left = rand(0,100)+'vw';
+      h.style.animationDuration = rand(6,14)+'s';
+      h.style.animationDelay = (-rand(0,10))+'s';
+      h.style.setProperty('--s', rand(0.7,1.9).toFixed(2));
+      h.style.opacity = rand(0.25,0.9);
+      heartsWrap.appendChild(h);
+    }
+
+    // --------- poziționare NO lângă YES ----------
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn  = document.getElementById('noBtn');
+
+    function placeNoNearYes(){
+      const yesRect = yesBtn.getBoundingClientRect();
+      // pune NO imediat în dreapta lui YES, pe aceeași linie
+      const x = yesRect.right + 18;
+      const y = yesRect.top + (yesRect.height - noBtn.offsetHeight)/2;
+
+      const pad = 12;
+      noBtn.style.left = Math.max(pad, Math.min(window.innerWidth - noBtn.offsetWidth - pad, x)) + 'px';
+      noBtn.style.top  = Math.max(pad, Math.min(window.innerHeight - noBtn.offsetHeight - pad, y)) + 'px';
+    }
+
+    // --------- NO fuge ----------
+    function fleeFrom(px, py){
+      const r = noBtn.getBoundingClientRect();
+      const cx = r.left + r.width/2;
+      const cy = r.top  + r.height/2;
+
+      const dx = cx - px;
+      const dy = cy - py;
+      const dist = Math.hypot(dx,dy);
+
+      const THRESHOLD = 140;
+      if(dist > THRESHOLD) return;
+
+      const nx = dx / (dist || 1);
+      const ny = dy / (dist || 1);
+
+      const jump = 240;
+      let tx = r.left + nx*jump + rand(-40,40);
+      let ty = r.top  + ny*jump + rand(-40,40);
+
+      const pad = 12;
+      tx = Math.max(pad, Math.min(window.innerWidth  - r.width  - pad, tx));
+      ty = Math.max(pad, Math.min(window.innerHeight - r.height - pad, ty));
+
+      noBtn.style.left = tx + 'px';
+      noBtn.style.top  = ty + 'px';
+    }
+
+    window.addEventListener('mousemove', (e)=>fleeFrom(e.clientX, e.clientY));
+    window.addEventListener('touchstart', (e)=>{
+      const t=e.touches[0]; if(t) fleeFrom(t.clientX, t.clientY);
+    }, {passive:true});
+    window.addEventListener('touchmove', (e)=>{
+      const t=e.touches[0]; if(t) fleeFrom(t.clientX, t.clientY);
+    }, {passive:true});
+
+    // dacă cineva chiar reușește click pe NO, sare iar
+    noBtn.addEventListener('click', (e)=>fleeFrom(e.clientX, e.clientY));
+
+    window.addEventListener('resize', placeNoNearYes);
+
+    // --------- modal YES ----------
+    const modal = document.getElementById('modalOverlay');
+    const closeModal = document.getElementById('closeModal');
+
+    yesBtn.addEventListener('click', ()=>{ modal.style.display='grid'; });
+    closeModal.addEventListener('click', ()=>{ modal.style.display='none'; });
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.style.display='none'; });
+
+    // init după ce se calculează dimensiunile
+    requestAnimationFrame(()=>{ placeNoNearYes(); });
+  </script>
+</body>
+</html>
